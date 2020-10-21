@@ -1,12 +1,48 @@
+scalar Upload
+scalar Date
+
+# Enums
+enum Status {
+	PENDING
+	ACCEPTED
+	DECLINED
+}
+
+enum Priority {
+	LOW
+	MEDIUM
+	HIGH
+}
+
+# Custom Auth payload
+type AuthPayload {
+	token: String!
+	profile: UserProfile!
+}
+
+# Custom browse type
+type Browse {
+	spotlight: Project!
+	recommendedProjects: [Project!]!
+	projectsNearYou: [Project!]!
+	newAndNoteworthyProjects: [Project!]!
+}
+
 # Queries
 type Query {
 	me: UserProfile!
 	user(id: ID!): UserProfile!
 	users(query: String): [UserProfile!]!
-	project(id: ID!): [Project!]!
+	projectById(id: ID!): Project!
+	projectBySlug(slug: String!): Project!
 	projects(query: String): [Project!]!
 	myProjects: [Project!]!
 	userProjects(id: ID!): [Project!]!
+	projectsNearMe: [Project!]!
+	recommendedProjects: [Project!]!
+	projectLikes(id: ID!): [ProjectLike!]!
+	directMessages: [DirectMessage!]!
+	getProjectsView: Browse!
 }
 
 # Mutations
@@ -28,13 +64,50 @@ type Mutation {
 	createProject(data: CreateProjectInput!): Project!
 	updateProject(id: ID!, data: UpdateProjectInput): Project!
 	deleteProject(id: ID!): Project!
+
+	# Project Donation
+	createProjectDonation(id: ID!, data: CreateProjectDonationInput!): ProjectDonation!
+
+	# Project likes
+	createProjectLike(id: ID!): ProjectLike!
+	deleteProjectLike(id: ID!): ProjectLike!
+
+	# Project comments
+	createProjectComment(data: CreateProjectCommentInput!): ProjectComment!
+	updateProjectComment(data: UpdateProjectCommentInput!): ProjectComment!
+	deleteProjectComment(id: ID!): ProjectComment!
+
+	# Project comment likes
+	createProjectCommentLike(id: ID!): ProjectComment!
+	deleteProjectCommentLike(id: ID!): ProjectComment!
+
+	# Project Trade
+	createProjectTrade(data: CreateProjectTrade!): ProjectTrade!
+
+	# Project Applicant
+	createProjectApplicant(data: CreateProjectApplicant!): ProjectApplicant!
+	acceptProjectApplicant(data: AssignProjectApplicant!): ProjectStudent!
+	declineProjectApplicant(data: AssignProjectApplicant!): ProjectStudent!
+
+	# Project Student
+	createProjectStudent(data: CreateProjectStudent!): ProjectStudent!
+
+	# Project Master Tradesman
+	createProjectMasterTradesman(data: CreateProjectMasterTradesman!): ProjectMasterTradesman!
+
+	# Project tasks
+	createProjectTask(data: CreateProjectTask!): ProjectTask!
+	updateProjectTask(id: ID!, project: ID!, data: UpdateProjectTask!): ProjectTask!
+
+	# Project task apprentices
+	CreateProjectApprenticeTask(data: CreateProjectApprenticeTask!): ProjectApprenticeTask!
 }
 
 # UserAccount
 type UserAccount {
-  id: ID!
-  email: String!
-  password: String!
+	id: ID!
+	email: String!
+	password: String!
 }
 
 input UserAccountInput {
@@ -49,8 +122,8 @@ input UpdateUserAccountInput {
 
 # ExternalAccount
 type ExternalAccount {
-  id: ID!
-  accountId: ID!
+	id: ID!
+	accountId: ID!
 }
 
 input ExternalAccountAuthInput {
@@ -59,18 +132,29 @@ input ExternalAccountAuthInput {
 
 # User
 type UserProfile {
-  id: ID!
-  userAccountId: ID!
-  email: String!
-  firstName: String
-  lastName: String
-  profileImage: String
-  city: String
-  zip: String
-  address: String
-  state: String
-  aptNumber: String
-  projects: [Project!]
+	id: ID!
+	userAccountId: ID!
+	verified: Boolean
+	email: String!
+	firstName: String
+	lastName: String
+	profileImage: String
+	country: String
+	state: String
+	city: String
+	zip: Int
+	phone: Int
+	address: String
+	aptNumber: String
+	donations: [ProjectDonation!]!
+	projects: [Project!]!
+	likedProjects: [ProjectLike!]!
+	comments: [ProjectComment!]
+	likedComments: [ProjectCommentLike!]!
+	applications: [ProjectApplicant!]!
+	studentProjects: [ProjectStudent!]!
+	tasks: [ProjectApprenticeTask!]!
+	tradeMasterProjects: [ProjectMasterTradesman!]
 }
 
 input CreateUserProfileInput {
@@ -78,70 +162,282 @@ input CreateUserProfileInput {
 	lastName: String
 	email: String!
 	profileImage: String
-	city: String
-	zip: String
-	address: String
+	country: String
 	state: String
+	city: String
+	zip: Int
+	address: String
 	aptNumber: String
+	phone: Int
 }
-
 
 input UpdateUserProfileInput {
 	firstName: String
 	lastName: String
 	email: String
 	profileImage: String
-	city: String
-	zip: String
-	address: String
+	country: String
 	state: String
+	city: String
+	zip: Int
+	address: String
 	aptNumber: String
+	phone: Int
 }
 
+# Project
 type Project {
-  id: ID!
-  profile: UserProfile!
-  name: String!
-  description: String!
-  address: String!
-  state: String!
-  zip: Int!
-  city: String!
-  goalAmount: Float!
-  amountFunded: Float!
+	id: ID!
+	profile: UserProfile!
+	slug: String!
+	name: String!
+	description: String!
+	country: String!
+	state: String!
+	city: String!
+	zip: Int!
+	address: String!
+	goalAmount: Float!
+	duration: Int!
+	difficulty: String!
+	startDate: Date!
+	featuredImage: String
+	donations: [ProjectDonation!]!
+	likes: [ProjectLike!]!
+	comments: [ProjectComment!]!
+	images: [ProjectImage!]!
+	trades: [ProjectTrade!]!
+	applicants: [ProjectApplicant!]!
+	tradeMasters: [ProjectMasterTradesman!]!
+	students: [ProjectStudent!]!
+	tasks: [ProjectTask!]!
+}
+
+type ProjectDonation {
+	id: ID!
+	project: Project!
+	profile: UserProfile!
+	amount: Float!
+	createdAt: Date!
+}
+
+input CreateProjectDonationInput {
+	amount: Float!
+	token: String!
+}
+
+type ProjectImage {
+	id: ID!
+	project: Project!
+	imageUrl: String!
+	public_id: String!
 }
 
 input CreateProjectInput {
 	name: String!
 	description: String!
-	address: String!
+	country: String!
 	state: String!
-	zip: Int!
 	city: String!
+	zip: Int!
+	address: String!
 	goalAmount: Float!
-	amountFunded: Float
+	duration: Int!
+	difficulty: String!
+	startDate: Date!
+	featuredImage: Upload
+	images: [Upload!]
 }
 
 input UpdateProjectInput {
 	name: String
 	description: String
-	address: String
+	country: String
 	state: String
-	zip: String
 	city: String
+	zip: Int
+	address: String
+	duration: Int
+	difficulty: String
+	startDate: Date
 	goalAmount: Float
-	amountFunded: Float
 }
 
-# Enums
-enum MutationType {
-	CREATED
-	UPDATED
-	DELETED
-}
-
-# Returned auth payload type
-type AuthPayload {
-	token: String!
+# Project Like
+type ProjectLike {
+	id: ID!
 	profile: UserProfile!
+	project: Project!
+}
+
+# Project Comment
+type ProjectComment {
+	id: ID!
+	profile: UserProfile!
+	project: Project!
+	comment: String!
+	likes: [ProjectCommentLike!]!
+}
+
+input CreateProjectCommentInput {
+	id: ID!
+	comment: String!
+}
+
+input UpdateProjectCommentInput {
+	id: ID!
+	comment: String!
+}
+
+# Project comment like
+type ProjectCommentLike {
+	id: ID!
+	profile: UserProfile!
+	comment: ProjectComment!
+}
+
+# Project Trade
+type ProjectTrade {
+	id: ID!
+	project: Project!
+	name: String!
+	description: String!
+}
+
+input CreateProjectTrade {
+	project: ID!
+	name: String!
+	description: String!
+}
+
+input UpdateProjectTrade {
+	project: ID!
+	name: String
+	description: String
+}
+
+# Project Applicant
+type ProjectApplicant {
+	id: ID!
+	project: Project!
+	profile: UserProfile!
+	trade: ProjectTrade!
+	licensed: Boolean!
+	coverLetter: String!
+	jobExperience: String!
+	education: String!
+	availability: String!
+	status: Status!
+}
+
+input CreateProjectApplicant {
+	project: ID!
+	trade: ID!
+	licensed: Boolean!
+	coverLetter: String!
+	jobExperience: String!
+	education: String!
+	availability: String!
+}
+
+input UpdateProjectApplicant {
+	project: ID!
+	trade: ID!
+	licensed: Boolean!
+	coverLetter: String!
+	jobExperience: String!
+	education: String!
+	availability: String!
+}
+
+input AssignProjectApplicant {
+	project: ID!
+	profile: ID!
+	application: ID!
+}
+
+# Project Student
+type ProjectStudent {
+	id: ID!
+	project: Project!
+	profile: UserProfile!
+}
+
+input CreateProjectStudent {
+	project: ID!
+	profile: ID!
+}
+
+# Project Master Tradesman
+type ProjectMasterTradesman {
+	id: ID!
+	project: Project!
+	profile: UserProfile!
+}
+
+input CreateProjectMasterTradesman {
+	project: ID!
+	profile: ID!
+}
+
+# Project Tasks
+type ProjectTask {
+	id: ID!
+	project: Project!
+	trade: ProjectTrade!
+	title: String!
+	description: String!
+	priority: Priority!
+	dueDate: Date!
+	budgetHours: Int!
+	completed: Boolean!
+	apprentices: [ProjectApprenticeTask!]!
+}
+
+input CreateProjectTask {
+	project: ID!
+	trade: ID!
+	title: String!
+	description: String!
+	priority: Priority!
+	dueDate: Date!
+	budgetHours: Int!
+	apprentices: [CreateProjectApprenticeTask!]
+}
+
+input UpdateProjectTask {
+	title: String
+	description: String
+	priority: Priority
+	dueDate: Date
+	budgetHours: Int
+	completed: Boolean
+}
+
+type ProjectApprenticeTask {
+	id: ID!
+	projectTask: ProjectTask!
+	profile: UserProfile!
+}
+
+input CreateProjectApprenticeTask {
+	projectTask: ID!
+	profile: ID!
+}
+
+type DirectMessage {
+	id: ID!
+	sender: UserProfile!
+	recipient: UserProfile!
+	message: String!
+	read: Boolean!
+	createdAt: Date!
+	updatedAt: Date!
+}
+
+input CreateDirectMessage {
+	sender: ID!
+	recipient: ID!
+	message: String!
+	read: Boolean!
 }

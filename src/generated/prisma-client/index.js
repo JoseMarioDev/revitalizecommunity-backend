@@ -5,6 +5,10 @@ var typeDefs = require("./prisma-schema").typeDefs;
 
 var models = [
   {
+    name: "Status",
+    embedded: false
+  },
+  {
     name: "UserAccount",
     embedded: false
   },
@@ -21,22 +25,58 @@ var models = [
     embedded: false
   },
   {
+    name: "ProjectDonation",
+    embedded: false
+  },
+  {
+    name: "ProjectImage",
+    embedded: false
+  },
+  {
     name: "ProjectLike",
     embedded: false
   },
   {
-    name: "Comment",
+    name: "ProjectComment",
     embedded: false
   },
   {
-    name: "CommentLike",
+    name: "ProjectCommentLike",
+    embedded: false
+  },
+  {
+    name: "ProjectTrade",
+    embedded: false
+  },
+  {
+    name: "ProjectApplicant",
+    embedded: false
+  },
+  {
+    name: "ProjectStudent",
+    embedded: false
+  },
+  {
+    name: "ProjectMasterTradesman",
+    embedded: false
+  },
+  {
+    name: "ProjectTask",
+    embedded: false
+  },
+  {
+    name: "ProjectApprenticeTask",
+    embedded: false
+  },
+  {
+    name: "DirectMessage",
     embedded: false
   }
 ];
 exports.Prisma = prisma_lib_1.makePrismaClientClass({
   typeDefs,
   models,
-  endpoint: `http://prisma:4466`,
-  secret: `thisissupersecret`
+  endpoint: `${process.env["PRISMA_ENDPOINT"]}`,
+  secret: `${process.env["PRISMA_SECRET"]}`
 });
 exports.prisma = new exports.Prisma();

@@ -25,9 +25,7 @@ export const UserAccount = {
   },
   async loginUser(parent, args, { prisma }, info) {
     const user = await prisma.userAccount({
-      where: {
         email: args.data.email
-      }
     });
 
     if (!user) {
@@ -49,7 +47,7 @@ export const UserAccount = {
       }
     });
 
-    const token = await generateToken(user.id, profile.id);
+    const token = await generateToken(user.id, profile[0].id);
 
     return { profile: profile[0], token };
   },

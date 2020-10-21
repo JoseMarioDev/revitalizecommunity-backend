@@ -4,21 +4,24 @@ export const UserProfile = {
 	async me(parent, args, { prisma, request }, info) {
 		const profileId = getProfileId(request);
 
-		return prisma.userProfile(
+		const userExists = await prisma.$exists.userProfile({ id: profileId })
+
+		if (!userExists) {
+			throw new Error("Sorry, but that user doesn't exist")
+		}
+
+		return await prisma.userProfile(
 			{
-				where: {
-					id: profileId
-				}
+				id: profileId
 			},
 			info
 		);
+
 	},
 	async user(parent, args, { prisma }, info) {
 		return prisma.userProfile(
 			{
-				where: {
-					id: args.id
-				}
+				id: args.id
 			},
 			info
 		);

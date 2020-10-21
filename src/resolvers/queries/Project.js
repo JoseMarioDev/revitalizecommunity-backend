@@ -1,53 +1,100 @@
 import { getProfileId } from '../../utils/getProfileId';
-import { async } from 'rxjs/internal/scheduler/async';
+
+import { recommendedProject } from '../../fragments/RecommendedProject';
+import { weightSort } from '../../utils/projectWeightedSort';
+import { nearYou } from '../../utils/nearYou';
+import { resolveIp } from '../../utils/resolveIp';
 
 export const Project = {
-	async project(parent, args, { prisma }, info) {
-		return prisma.projects({
-			where: {
-				id: args.id
-			}
-		}, info)
+	async projectById(parent, args, { prisma }, info) {
+		return prisma.project(
+			{
+				id: args.id,
+			},
+			info,
+		);
 	},
-	async projects(parent, args, { prisma }, info) {
-		const opArgs = {};
+	async projectBySlug(parent, args, { prisma }, info) {
+		const project = await prisma.projects(
+			{
+				where: {
+					slug: args.slug,
+				},
+			},
+			info,
+		);
+
+		return project[0];
+	},
+	async projects(parent, args, { prisma, request }, info) {
+		let opArgs = {};
 
 		if (args.query) {
-			opArgs.where = {
-				OR: [
-					{
-						name_contains: args.query
+			opArgs = {
+				where: {
+					trades_some: {
+						name_contains: args.query,
 					},
-					{
-						city_contains: args.query
-					},
-					{
-						state_contains: args.query
-					}
-				]
+				},
 			};
 		}
 
-		return prisma.projects(opArgs, info)
+		return prisma.projects(opArgs, info);
 	},
 	async myProjects(parent, args, { prisma, request }, info) {
 		const profileId = getProfileId(request);
 
-		return prisma.projects({
-			where: {
-				profile: {
-					id: profileId
-				}
-			}
-		}, info)
+		return prisma.projects(
+			{
+				where: {
+					profile: {
+						id: profileId,
+					},
+				},
+			},
+			info,
+		);
 	},
 	async userProjects(parent, args, { prisma }, info) {
-		return prisma.projects({
-			where: {
-				profile: {
-					id: args.id
-				}
-			}
-		}, info)
-	}
+		return prisma.projects(
+			{
+				where: {
+					profile: {
+						id: args.id,
+					},
+				},
+			},
+			info,
+		);
+	},
+	async recommendedProjects(parent, args, { prisma }, info) {
+		const projects = await prisma.projects({}, info).$fragment(recommendedProject);
+		return weightSort(projects);
+	},
+	async projectsNearMe(parent, args, { prisma, request }, info) {
+		return nearYou(prisma, request);
+	},
+	async getProjectsView(parent, args, { prisma, request, redis }, info) {
+		const projects = {};
+
+		const recommendedProjects = await prisma.projects({}).$fragment(recommendedProject);
+		projects.recommendedProjects = weightSort(recommendedProjects);
+
+		const projectsNearYou = await nearYou(prisma, request);
+		projects.spotlight = projectsNearYou[0];
+		projects.projectsNearYou = projectsNearYou.slice(1);
+		const newAndNoteworthyProjects = await prisma.projects({
+			orderBy: 'createdAt_DESC',
+		});
+
+		projects.newAndNoteworthyProjects = newAndNoteworthyProjects;
+
+		const ip = resolveIp(request);
+
+		if (ip !== null) {
+			await redis.setex(`getProjectsView${ip}`, 86400, JSON.stringify(projects));
+		}
+
+		return projects;
+	},
 };

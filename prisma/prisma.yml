@@ -1,14 +1,15 @@
 # Specifies the HTTP endpoint of the prisma api
-endpoint: http://localhost:4466
+endpoint: ${env:PRISMA_ENDPOINT}
+
+secret: ${env:PRISMA_SECRET}
 
 # Defines models, each model is mapped to the database as a collection.
 datamodel: datamodel.prisma
 
 # Specifies the language and directory for the generated Prisma client.
 generate:
-  - generator: javascript-client
-    output: ../src/generated/prisma-client/
+    - generator: javascript-client
+      output: ../src/generated/prisma-client/
 
-secret: thisissupersecret
-# seed:
-#   run: node ./prisma/seed.js
+seed:
+  run: node ./prisma/seed.js

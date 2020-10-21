@@ -1,3 +1,9 @@
+enum Status {
+  PENDING
+  ACCEPTED
+  DECLINED
+}
+
 type UserAccount {
   id: ID! @id
   email: String! @unique
@@ -16,62 +22,161 @@ type ExternalAccount {
 type UserProfile {
   id: ID! @id
   userAccountId: ID!
+  verified: Boolean @default(value: false)
   email: String! @unique
   firstName: String
   lastName: String
   profileImage: String
-  city: String
-  zip: String
+  country: String
   address: String
   state: String
+  city: String
+  zip: Int
+  phone: Int
   aptNumber: String
-  projects: [Project!]
-  projectLikes: [ProjectLike!]!
-  comments: [Comment!]
-  commentLikes: [CommentLike!]!
+  donations: [ProjectDonation!]! @relation(name: "ProjectDonationToUserProfile", onDelete: CASCADE)
+  projects: [Project!]! @relation(name: "ProjectToUserProfile", onDelete: CASCADE)
+  studentProjects: [ProjectStudent!]! @relation(name: "ProjectStudentToProfile", onDelete: CASCADE)
+  tasks: [ProjectApprenticeTask!]! @relation(name: "ProjectApprenticeTaskToUserProfile", onDelete: CASCADE)
+  tradeMasterProjects: [ProjectMasterTradesman!] @relation(name: "ProjectMasterTradesmanToProfile", onDelete: CASCADE)
+  likedProjects: [ProjectLike!]! @relation(name: "ProjectLikeToUserProfile", onDelete: CASCADE)
+  comments: [ProjectComment!] @relation(name: "CommentToUserProfile", onDelete: CASCADE)
+  likedComments: [ProjectCommentLike!]! @relation(name: "CommentLikeToUserProfile", onDelete: CASCADE)
+  applications: [ProjectApplicant!]! @relation(name: "ApplicantToUserProfile", onDelete: CASCADE)
+  sentMessages: [DirectMessage!]! @relation(name: "SentDirectMessageToUserProfile", onDelete: CASCADE)
+  recipientMessages: [DirectMessage!]! @relation(name: "RecipientDirectMessageToUserProfile", onDelete: CASCADE)
   createdAt: DateTime! @createdAt
   updatedAt: DateTime! @updatedAt
 }
 
 type Project {
   id: ID! @id
-  profile: UserProfile!
+  slug: String! @unique
+  profile: UserProfile! @relation(name: "ProjectToUserProfile", onDelete: SET_NULL)
   name: String!
   description: String!
+  country: String! @default(value: "United States")
   address: String!
   state: String!
-  zip: Int!
   city: String!
+  zip: Int!
+  duration: Int!
+  difficulty: String!
+  startDate: DateTime!
   goalAmount: Float!
-  amountFunded: Float! @default(value: 0)
-  comments: [Comment!]!
-  likes: [ProjectLike!]!
+  featuredImage: String
+  donations: [ProjectDonation!]! @relation(name: "ProjectDonationToProject", onDelete: CASCADE)
+  images: [ProjectImage!]! @relation(name: "ImagesToProject", onDelete: CASCADE)
+  likes: [ProjectLike!]! @relation(name: "ProjectLike", onDelete: CASCADE)
+  comments: [ProjectComment!]! @relation(name: "ProjectComment", onDelete: CASCADE)
+  trades: [ProjectTrade!]! @relation(name: "ProjectTradeToProject", onDelete: CASCADE)
+  tasks: [ProjectTask!]! @relation(name: "ProjectTaskToProject", onDelete: CASCADE)
+  applicants: [ProjectApplicant!]! @relation(name: "ApplicantToProject", onDelete: CASCADE)
+  students: [ProjectStudent!]! @relation(name: "ProjectStudentToProject", onDelete: CASCADE)
+  tradeMasters: [ProjectMasterTradesman!]! @relation(name: "ProjectMasterTradesmanToProject", onDelete: CASCADE)
   createdAt: DateTime! @createdAt
   updatedAt: DateTime! @updatedAt
+}
+
+type ProjectDonation {
+  id: ID! @id
+  project: Project! @relation(name: "ProjectDonationToProject", onDelete: SET_NULL)
+  profile: UserProfile! @relation(name: "ProjectDonationToUserProfile", onDelete: SET_NULL)
+  amount: Float!
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
+}
+
+type ProjectImage {
+  id: ID! @id,
+  project: Project! @relation(name: "ImagesToProject")
+  imageUrl: String!
+  public_id: ID!
 }
 
 type ProjectLike {
   id: ID! @id
-  profile: UserProfile!
-  project: Project!
+  profile: UserProfile! @relation(name: "ProjectLikeToUserProfile")
+  project: Project! @relation(name: "ProjectLike", onDelete: SET_NULL)
   createdAt: DateTime! @createdAt
   updatedAt: DateTime! @updatedAt
 }
 
-type Comment {
+type ProjectComment {
   id: ID! @id
-  profile: UserProfile!
-  project: Project!
-  text: String!
-  likes: [CommentLike!]!
+  profile: UserProfile! @relation(name: "CommentToUserProfile")
+  project: Project! @relation(name: "ProjectComment")
+  comment: String!
+  likes: [ProjectCommentLike!]! @relation(name: "ProjectCommentLike", onDelete: CASCADE)
   createdAt: DateTime! @createdAt
   updatedAt: DateTime! @updatedAt
 }
 
-type CommentLike {
+type ProjectCommentLike {
   id: ID! @id
-  profile: UserProfile!
-  comment: Comment!
+  profile: UserProfile! @relation(name: "CommentLikeToUserProfile", onDelete: SET_NULL)
+  comment: ProjectComment! @relation(name: "ProjectCommentLike", onDelete: SET_NULL)
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
+}
+
+type ProjectTrade {
+  id: ID! @id
+  project: Project! @relation(name: "ProjectTradeToProject", onDelete: SET_NULL)
+  name: String!
+  description: String!
+}
+
+type ProjectApplicant {
+  id: ID! @id
+  project: Project! @relation(name: "ApplicantToProject", onDelete: SET_NULL)
+  profile: UserProfile! @relation(name: "ApplicantToUserProfile", onDelete: SET_NULL)
+  trade: ProjectTrade!
+  licensed: Boolean!
+  coverLetter: String!
+  jobExperience: String!
+  education: String!
+  availability: String!
+  status: Status! @default(value: PENDING)
+}
+
+type ProjectStudent {
+  id: ID! @id
+  project: Project! @relation(name: "ProjectStudentToProject", onDelete: SET_NULL)
+  profile: UserProfile! @relation(name: "ProjectStudentToProfile", onDelete: SET_NULL)
+}
+
+type ProjectMasterTradesman {
+  id: ID! @id
+  project: Project! @relation(name: "ProjectMasterTradesmanToProject", onDelete: SET_NULL)
+  profile: UserProfile! @relation(name: "ProjectMasterTradesmanToProfile")
+}
+
+type ProjectTask {
+  id: ID! @id
+  project: Project! @relation(name: "ProjectTaskToProject", onDelete: SET_NULL)
+  trade: ProjectTrade!
+  title: String!
+  description: String!
+  priority: String!
+  dueDate: DateTime!
+  budgetHours: Int!
+  completed: Boolean! @default(value: false)
+  apprentices: [ProjectApprenticeTask!] @relation(name: "ProjectApprenticeTaskToProjectTask", onDelete: CASCADE)
+}
+
+type ProjectApprenticeTask {
+  id: ID! @id
+  projectTask: ProjectTask! @relation(name: "ProjectApprenticeTaskToProjectTask")
+  profile: UserProfile! @relation(name: "ProjectApprenticeTaskToUserProfile")
+}
+
+type DirectMessage {
+  id: ID! @id
+  sender: UserProfile! @relation(name: "SentDirectMessageToUserProfile", onDelete: SET_NULL)
+  recipient: UserProfile! @relation(name: "RecipientDirectMessageToUserProfile", onDelete: SET_NULL)
+  message: String!
+  read: Boolean! @default(value: false)
   createdAt: DateTime! @createdAt
   updatedAt: DateTime! @updatedAt
 }
