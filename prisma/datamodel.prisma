@@ -1,0 +1,77 @@
+type UserAccount {
+  id: ID! @id
+  email: String! @unique
+  password: String!
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
+}
+
+type ExternalAccount {
+  id: ID! @id
+  accountId: ID! @unique
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
+}
+
+type UserProfile {
+  id: ID! @id
+  userAccountId: ID!
+  email: String! @unique
+  firstName: String
+  lastName: String
+  profileImage: String
+  city: String
+  zip: String
+  address: String
+  state: String
+  aptNumber: String
+  projects: [Project!]
+  projectLikes: [ProjectLike!]!
+  comments: [Comment!]
+  commentLikes: [CommentLike!]!
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
+}
+
+type Project {
+  id: ID! @id
+  profile: UserProfile!
+  name: String!
+  description: String!
+  address: String!
+  state: String!
+  zip: Int!
+  city: String!
+  goalAmount: Float!
+  amountFunded: Float! @default(value: 0)
+  comments: [Comment!]!
+  likes: [ProjectLike!]!
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
+}
+
+type ProjectLike {
+  id: ID! @id
+  profile: UserProfile!
+  project: Project!
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
+}
+
+type Comment {
+  id: ID! @id
+  profile: UserProfile!
+  project: Project!
+  text: String!
+  likes: [CommentLike!]!
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
+}
+
+type CommentLike {
+  id: ID! @id
+  profile: UserProfile!
+  comment: Comment!
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
+}

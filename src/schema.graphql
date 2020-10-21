@@ -1,0 +1,147 @@
+# Queries
+type Query {
+	me: UserProfile!
+	user(id: ID!): UserProfile!
+	users(query: String): [UserProfile!]!
+	project(id: ID!): [Project!]!
+	projects(query: String): [Project!]!
+	myProjects: [Project!]!
+	userProjects(id: ID!): [Project!]!
+}
+
+# Mutations
+type Mutation {
+	# Auth
+	createUser(data: UserAccountInput!): AuthPayload!
+	loginUser(data: UserAccountInput!): AuthPayload!
+	loginExternalAccount(data: ExternalAccountAuthInput!): AuthPayload!
+
+	# User
+	updateUser(data: UpdateUserAccountInput): UserAccount!
+	deleteUser: UserAccount!
+
+	# Profile
+	updateUserProfile(data: UpdateUserProfileInput!): UserProfile!
+	deleteUserProfile: UserProfile!
+
+	# Project
+	createProject(data: CreateProjectInput!): Project!
+	updateProject(id: ID!, data: UpdateProjectInput): Project!
+	deleteProject(id: ID!): Project!
+}
+
+# UserAccount
+type UserAccount {
+  id: ID!
+  email: String!
+  password: String!
+}
+
+input UserAccountInput {
+	email: String!
+	password: String!
+}
+
+input UpdateUserAccountInput {
+	email: String
+	password: String
+}
+
+# ExternalAccount
+type ExternalAccount {
+  id: ID!
+  accountId: ID!
+}
+
+input ExternalAccountAuthInput {
+	accountId: ID!
+}
+
+# User
+type UserProfile {
+  id: ID!
+  userAccountId: ID!
+  email: String!
+  firstName: String
+  lastName: String
+  profileImage: String
+  city: String
+  zip: String
+  address: String
+  state: String
+  aptNumber: String
+  projects: [Project!]
+}
+
+input CreateUserProfileInput {
+	firstName: String
+	lastName: String
+	email: String!
+	profileImage: String
+	city: String
+	zip: String
+	address: String
+	state: String
+	aptNumber: String
+}
+
+
+input UpdateUserProfileInput {
+	firstName: String
+	lastName: String
+	email: String
+	profileImage: String
+	city: String
+	zip: String
+	address: String
+	state: String
+	aptNumber: String
+}
+
+type Project {
+  id: ID!
+  profile: UserProfile!
+  name: String!
+  description: String!
+  address: String!
+  state: String!
+  zip: Int!
+  city: String!
+  goalAmount: Float!
+  amountFunded: Float!
+}
+
+input CreateProjectInput {
+	name: String!
+	description: String!
+	address: String!
+	state: String!
+	zip: Int!
+	city: String!
+	goalAmount: Float!
+	amountFunded: Float
+}
+
+input UpdateProjectInput {
+	name: String
+	description: String
+	address: String
+	state: String
+	zip: String
+	city: String
+	goalAmount: Float
+	amountFunded: Float
+}
+
+# Enums
+enum MutationType {
+	CREATED
+	UPDATED
+	DELETED
+}
+
+# Returned auth payload type
+type AuthPayload {
+	token: String!
+	profile: UserProfile!
+}
