@@ -24,7 +24,6 @@ passport.use(
 			clientSecret: process.env.GOOGLE_CLIENT_SECRET,
 			callbackURL: '/auth/google/callback',
 			// callbackURL: 'https://revitalizecommunity.herokuapp.com/auth/google/callback',
-			
 			proxy: true
 		},
 		async (accessToken, refreshToken, profile, done) => {
